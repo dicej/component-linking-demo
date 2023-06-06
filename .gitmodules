@@ -1,0 +1,14 @@
+[submodule "wasmtime"]
+	path = wasmtime
+	url = https://github.com/bytecodealliance/wasmtime
+[submodule "wit-bindgen"]
+	path = wit-bindgen
+	url = https://github.com/bytecodealliance/wit-bindgen
+[submodule "wasm-tools"]
+	path = wasm-tools
+	url = https://github.com/dicej/wasm-tools
+	branch = linking
+[submodule "wasi-sdk"]
+	path = wasi-sdk
+	url = https://github.com/dicej/wasi-sdk
+	branch = dynamic-linking
