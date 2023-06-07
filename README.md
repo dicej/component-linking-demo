@@ -10,8 +10,6 @@ Prerequisites:
 - Clang
 - Ninja
 
-Note that the fork of `wasm-tools` I'm using to do the linking does not yet support cyclic dependencies, so this won't run all the way to completion yet.  I'm planning to address that soon-ish.
-
 ```
 git submodule update --init --recursive
 make
