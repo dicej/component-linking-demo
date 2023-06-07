@@ -1,0 +1,11 @@
+[package]
+name = "runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.71"
+clap = { version = "4.3.2", features = ["derive"] }
+tokio = { version = "1.28.2", features = ["macros", "rt", "rt-multi-thread", "fs"] }
+wasmtime = { path = "../wasmtime/crates/wasmtime", features = ['component-model']}
+wasmtime-wasi = { path = "../wasmtime/crates/wasi" }

@@ -10,6 +10,8 @@ Prerequisites:
 - Clang
 - Ninja
 
+Note that the `make` step will take quite a while the first time you run it since it needs to build LLVM, wasi-libc, Wasmtime, wit-bindgen, and wasm-tools.  Subsequent builds should be quite fast, though.
+
 ```
 git submodule update --init --recursive
 make
