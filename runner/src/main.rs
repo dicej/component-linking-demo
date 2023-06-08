@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
         .instance("test:test/test")?
         .func_wrap("bar", |_store, (v,): (i32,)| Ok((v + 7,)))?;
     let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().build(&mut table)?;
+    let wasi = WasiCtxBuilder::new().inherit_stdio().build(&mut table)?;
     let mut store = Store::new(&engine, Ctx { wasi, table });
     let instance = linker
         .instantiate_async(
