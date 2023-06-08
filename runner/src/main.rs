@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
         .ok_or_else(|| anyhow!("instance `test:test/test` not found"))?
         .typed_func::<(i32,), (i32,)>("bar")?;
 
-    assert_eq!(80, func.call_async(&mut store, (7,)).await?.0);
+    assert_eq!(87, func.call_async(&mut store, (7,)).await?.0);
 
     Ok(())
 }

@@ -6,14 +6,14 @@ RUNNER := $(abspath runner)
 WASM_TOOLS_CLI := $(WASM_TOOLS)/target/release/wasm-tools
 WIT_BINDGEN_CLI := $(WIT_BINDGEN)/target/release/wit-bindgen
 RUNNER_CLI := $(RUNNER)/target/release/runner
+BUILD_DIR := build
 CC := $(WASI_SDK)/bin/clang
 LD := $(WASI_SDK)/bin/wasm-ld
 LDFLAGS := -shared --Bdynamic -L$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi -lc
-CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter
+CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -MD -MP -I$(BUILD_DIR) -fPIC
 WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_preview1_component_adapter.wasm
 BUILTINS := $(WASI_SDK)/lib/clang/17/lib/wasi/libclang_rt.builtins-wasm32.a
 LIBC := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so
-BUILD_DIR := build
 
 .PHONY: test
 test: $(BUILD_DIR)/bar.wasm $(RUNNER_CLI)
@@ -35,7 +35,7 @@ $(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_impl.o: $(CC)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p "$(@D)"
-	$(CC) $(CFLAGS) -MD -MP -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(WASI_ADAPTER):
 	cargo build --target wasm32-unknown-unknown \
