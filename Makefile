@@ -21,17 +21,24 @@ test: $(BUILD_DIR)/bar.wasm $(RUNNER_CLI)
 
 $(BUILD_DIR)/bar.wasm: $(WASM_TOOLS_CLI)
 
-$(BUILD_DIR)/bar.wasm: $(BUILD_DIR)/libbar.so $(LIBC) $(WASI_ADAPTER)
-	$(WASM_TOOLS_CLI) component link --adapt wasi_snapshot_preview1=$(WASI_ADAPTER) $< $(LIBC) -o $@
+$(BUILD_DIR)/bar.wasm: $(BUILD_DIR)/libbar.so $(BUILD_DIR)/libfoo.so $(BUILD_DIR)/libdl.so $(LIBC) $(WASI_ADAPTER)
+	$(WASM_TOOLS_CLI) component link --adapt wasi_snapshot_preview1=$(WASI_ADAPTER) \
+		--dl-openable $(BUILD_DIR)/libfoo.so $(BUILD_DIR)/libbar.so $(BUILD_DIR)/libdl.so $(LIBC) -o $@
 
 $(BUILD_DIR)/libbar.so: $(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_component_type.o $(BUILD_DIR)/bar_impl.o
+	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
+
+$(BUILD_DIR)/libfoo.so: $(BUILD_DIR)/foo.o
+	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
+
+$(BUILD_DIR)/libdl.so: $(BUILD_DIR)/dl.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
 
 $(BUILD_DIR)/bar.c $(BUILD_DIR)/bar.h $(BUILD_DIR)/bar_component_type.o: test.wit $(WIT_BINDGEN_CLI)
 	@mkdir -p "$(@D)"
 	$(WIT_BINDGEN_CLI) c --out-dir "$(@D)" $<
 
-$(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_impl.o: $(CC)
+$(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_impl.o $(BUILD_DIR)/foo.o $(BUILD_DIR)/dl.o: $(CC)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p "$(@D)"
