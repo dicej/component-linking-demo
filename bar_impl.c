@@ -1,13 +1,27 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#include <Python.h>
 #include "bar.h"
 
 int32_t exports_test_test_test_bar(int32_t arg) {
     printf("hello, world!\n");
 
+    Py_Initialize();
+
+    PyObject* globals = PyDict_New();
+    PyDict_SetItem(globals, PyUnicode_FromString("value"), PyLong_FromLong(arg));
+
+    PyObject* result = PyRun_String("value + 18", Py_eval_input, globals, PyDict_New());
+    if (result == NULL) {
+        fprintf(stderr, "PyRun_String failed\n");
+        abort();
+    }
+
+    arg = PyLong_AsLong(result);
+
     void* foo_lib = dlopen("libfoo.so", 0);
-    if (foo_lib == 0) {
+    if (foo_lib == NULL) {
         fprintf(stderr, "unable to dlopen libfoo.so: %s\n", dlerror());
         abort();
     }

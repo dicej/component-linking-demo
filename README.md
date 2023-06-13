@@ -5,12 +5,14 @@ This is an experiment in implementing [shared-everything linking](https://github
 ## Building
 
 Prerequisites:
+- A UNIX-style OS, e.g. Linux, WSL2 or MacOS
 - Rust (including the wasm32-unknown-unknown target)
 - CMake
 - Clang
 - Ninja
+- [CPython](https://github.com/python/cpython) build dependencies
 
-Note that the `make` step will take quite a while the first time you run it since it needs to build LLVM, wasi-libc, Wasmtime, wit-bindgen, and wasm-tools.  Subsequent builds should be quite fast, though.
+Note that the `make` step will take quite a while the first time you run it since it needs to build LLVM, wasi-libc, CPython, Wasmtime, wit-bindgen, and wasm-tools.  Subsequent builds should be quite fast, though.
 
 ```
 git submodule update --init --recursive

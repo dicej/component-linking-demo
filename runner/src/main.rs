@@ -1,18 +1,44 @@
 use {
     anyhow::{anyhow, Result},
+    cap_std::fs::Dir,
     clap::Parser,
-    std::path::PathBuf,
     tokio::fs,
     wasmtime::{
         component::{Component, Linker},
         Config, Engine, Store,
     },
-    wasmtime_wasi::preview2::{wasi::command, Table, WasiCtx, WasiCtxBuilder, WasiView},
+    wasmtime_wasi::preview2::{
+        wasi::command, DirPerms, FilePerms, Table, WasiCtx, WasiCtxBuilder, WasiView,
+    },
 };
+
+fn parse_mapdir(s: &str) -> Result<(String, String)> {
+    if let Some((guest_dir, host_dir)) = s.split_once("::") {
+        Ok((guest_dir.into(), host_dir.into()))
+    } else {
+        Err(anyhow!(
+            "expected string of form GUEST_DIR::HOST_DIR; got {s}"
+        ))
+    }
+}
+
+fn parse_env(s: &str) -> Result<(String, String)> {
+    if let Some((name, value)) = s.split_once("=") {
+        Ok((name.into(), value.into()))
+    } else {
+        Err(anyhow!("expected string of form NAME=VALUE; got {s}"))
+    }
+}
 
 #[derive(Parser)]
 pub struct Options {
-    component: PathBuf,
+    component: String,
+
+    #[clap(long, value_name = "GUEST_DIR::HOST_DIR", value_parser = parse_mapdir)]
+    mapdir: Vec<(String, String)>,
+
+    #[clap(long, value_name = "NAME=VALUE", value_parser = parse_env)]
+    env: Vec<(String, String)>,
 }
 
 struct Ctx {
@@ -51,7 +77,22 @@ async fn main() -> Result<()> {
         .func_wrap("bar", |_store, (v,): (i32,)| Ok((v + 7,)))?;
 
     let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().inherit_stdio().build(&mut table)?;
+    let mut wasi = WasiCtxBuilder::new().inherit_stdio();
+
+    for (guest_dir, host_dir) in options.mapdir {
+        wasi = wasi.push_preopened_dir(
+            Dir::from_std_file(std::fs::File::open(host_dir)?),
+            DirPerms::READ | DirPerms::MUTATE,
+            FilePerms::READ | FilePerms::WRITE,
+            guest_dir,
+        );
+    }
+
+    for (name, value) in options.env {
+        wasi = wasi.push_env(name, value);
+    }
+
+    let wasi = wasi.build(&mut table)?;
     let mut store = Store::new(&engine, Ctx { wasi, table });
 
     let instance = linker
@@ -67,7 +108,7 @@ async fn main() -> Result<()> {
         .ok_or_else(|| anyhow!("instance `test:test/test` not found"))?
         .typed_func::<(i32,), (i32,)>("bar")?;
 
-    assert_eq!(120, func.call_async(&mut store, (7,)).await?.0);
+    assert_eq!(138, func.call_async(&mut store, (7,)).await?.0);
 
     Ok(())
 }
