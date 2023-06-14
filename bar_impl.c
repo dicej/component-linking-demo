@@ -7,6 +7,8 @@
 int32_t exports_test_test_test_bar(int32_t arg) {
     printf("hello, world!\n");
 
+    //Py_Main(1, (wchar_t**) &L"python3");
+
     Py_Initialize();
 
     PyObject* globals = PyDict_New();

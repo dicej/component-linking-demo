@@ -29,7 +29,6 @@ $(BUILD_DIR)/bar.wasm: $(WASM_TOOLS_CLI)
 $(BUILD_DIR)/bar.wasm: \
 		$(BUILD_DIR)/libbar.so \
 		$(BUILD_DIR)/libfoo.so \
-		$(BUILD_DIR)/libdl.so \
 		$(BUILD_DIR)/libpython3.11.so \
 		$(LIBC) \
 		$(WASI_ADAPTER)
@@ -37,7 +36,6 @@ $(BUILD_DIR)/bar.wasm: \
 		--adapt wasi_snapshot_preview1=$(WASI_ADAPTER) \
 		--dl-openable $(BUILD_DIR)/libfoo.so \
 		$(BUILD_DIR)/libbar.so \
-		$(BUILD_DIR)/libdl.so \
 		$(BUILD_DIR)/libpython3.11.so \
 		$(LIBC) \
 		-o $@
@@ -48,9 +46,6 @@ $(BUILD_DIR)/libbar.so: $(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_component_type.o $(B
 $(BUILD_DIR)/libfoo.so: $(BUILD_DIR)/foo.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
 
-$(BUILD_DIR)/libdl.so: $(BUILD_DIR)/dl.o
-	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
-
 $(BUILD_DIR)/libpython3.11.so: $(CPYTHON_ARCHIVES)
 	$(LD) $(LDFLAGS) -o $@ \
 		--whole-archive $(CPYTHON)/lib/libpython3.11.a --no-whole-archive \
@@ -58,9 +53,11 @@ $(BUILD_DIR)/libpython3.11.so: $(CPYTHON_ARCHIVES)
 		$(CPYTHON)/../Modules/expat/libexpat.a \
 		$(BUILTINS)
 
-$(CPYTHON_ARCHIVES):
+$(CPYTHON)/../../build/libpython3.11.a:
 	@mkdir -p cpython/builddir/build
 	(cd cpython/builddir/build && ../../configure --prefix=$$(pwd)/install && make)
+
+$(CPYTHON_ARCHIVES): $(CPYTHON)/../../build/libpython3.11.a
 	@mkdir -p cpython/builddir/wasi
 	(cd cpython/builddir/wasi && \
 		WASI_SDK_PATH=$(WASI_SDK) \
@@ -76,6 +73,7 @@ $(CPYTHON_ARCHIVES):
 			else echo $$(pwd)/../build/python; \
 			fi) \
 		--prefix=$$(pwd)/install \
+		--enable-wasm-dynamic-linking \
 		--disable-test-modules && \
 		make install)
 
@@ -85,7 +83,7 @@ $(BUILD_DIR)/bar.c $(BUILD_DIR)/bar.h $(BUILD_DIR)/bar_component_type.o: test.wi
 	@mkdir -p "$(@D)"
 	$(WIT_BINDGEN_CLI) c --out-dir "$(@D)" $<
 
-$(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_impl.o $(BUILD_DIR)/foo.o $(BUILD_DIR)/dl.o: $(CC)
+$(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_impl.o $(BUILD_DIR)/foo.o: $(CC)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p "$(@D)"
