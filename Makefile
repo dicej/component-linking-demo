@@ -57,7 +57,7 @@ $(CPYTHON)/../../build/libpython3.11.a:
 	@mkdir -p cpython/builddir/build
 	(cd cpython/builddir/build && ../../configure --prefix=$$(pwd)/install && make)
 
-$(CPYTHON_ARCHIVES): $(CPYTHON)/../../build/libpython3.11.a
+$(CPYTHON)/lib/libpython3.11.a: $(CPYTHON)/../../build/libpython3.11.a $(CC)
 	@mkdir -p cpython/builddir/wasi
 	(cd cpython/builddir/wasi && \
 		WASI_SDK_PATH=$(WASI_SDK) \
