@@ -35,5 +35,12 @@ int32_t exports_test_test_test_bar(int32_t arg) {
         abort();
     }
 
-    return ((int32_t (*)(int32_t)) foo_func)(test_test_test_bar(arg + 73));
+    int32_t value = ((int32_t (*)(int32_t)) foo_func)(test_test_test_bar(arg + 73));
+
+    if (dlclose(foo_lib)) {
+        fprintf(stderr, "unable to dlclose libfoo.so: %s\n", dlerror());
+        abort();
+    }
+
+    return value;
 }

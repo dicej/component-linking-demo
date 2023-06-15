@@ -9,11 +9,9 @@ WIT_BINDGEN_CLI := $(WIT_BINDGEN)/target/release/wit-bindgen
 RUNNER_CLI := $(RUNNER)/target/release/runner
 BUILD_DIR := build
 CC := $(WASI_SDK)/bin/clang
-LD := $(WASI_SDK)/bin/wasm-ld
-LDFLAGS := -shared --Bdynamic -L$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi -lc
+LDFLAGS := -shared
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -MD -MP -I$(BUILD_DIR) -I$(CPYTHON)/include/python3.11 -fPIC
 WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_preview1_component_adapter.wasm
-BUILTINS := $(WASI_SDK)/lib/clang/17/lib/wasi/libclang_rt.builtins-wasm32.a
 LIBC := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so
 CPYTHON_ARCHIVES := \
 	$(CPYTHON)/lib/libpython3.11.a \
@@ -41,17 +39,16 @@ $(BUILD_DIR)/bar.wasm: \
 		-o $@
 
 $(BUILD_DIR)/libbar.so: $(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_component_type.o $(BUILD_DIR)/bar_impl.o
-	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 $(BUILD_DIR)/libfoo.so: $(BUILD_DIR)/foo.o
-	$(LD) $(LDFLAGS) -o $@ $^ $(BUILTINS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 $(BUILD_DIR)/libpython3.11.so: $(CPYTHON_ARCHIVES)
-	$(LD) $(LDFLAGS) -o $@ \
-		--whole-archive $(CPYTHON)/lib/libpython3.11.a --no-whole-archive \
+	$(CC) $(LDFLAGS) -o $@ \
+		-Wl,--whole-archive $(CPYTHON)/lib/libpython3.11.a -Wl,--no-whole-archive \
 		$(CPYTHON)/../Modules/_decimal/libmpdec/libmpdec.a \
-		$(CPYTHON)/../Modules/expat/libexpat.a \
-		$(BUILTINS)
+		$(CPYTHON)/../Modules/expat/libexpat.a
 
 $(CPYTHON)/../../build/libpython3.11.a:
 	@mkdir -p cpython/builddir/build
