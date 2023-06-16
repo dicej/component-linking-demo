@@ -7,14 +7,14 @@
 int32_t exports_test_test_test_bar(int32_t arg) {
     printf("hello, world!\n");
 
-    //Py_Main(1, (wchar_t**) &L"python3");
-
     Py_Initialize();
 
     PyObject* globals = PyDict_New();
+    PyObject* locals = PyDict_New();
     PyDict_SetItem(globals, PyUnicode_FromString("value"), PyLong_FromLong(arg));
+    PyRun_String("import numpy", Py_file_input, globals, locals);
 
-    PyObject* result = PyRun_String("value + 18", Py_eval_input, globals, PyDict_New());
+    PyObject* result = PyRun_String("value + numpy.array([18])[0]", Py_eval_input, globals, locals);
     if (result == NULL) {
         fprintf(stderr, "PyRun_String failed\n");
         abort();

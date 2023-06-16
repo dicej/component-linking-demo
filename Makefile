@@ -4,6 +4,7 @@ WASM_TOOLS := $(abspath wasm-tools)
 WIT_BINDGEN := $(abspath wit-bindgen)
 CPYTHON := $(abspath cpython/builddir/wasi/install)
 RUNNER := $(abspath runner)
+NUMPY := $(abspath numpy)
 WASM_TOOLS_CLI := $(WASM_TOOLS)/target/release/wasm-tools
 WIT_BINDGEN_CLI := $(WIT_BINDGEN)/target/release/wit-bindgen
 RUNNER_CLI := $(RUNNER)/target/release/runner
@@ -13,14 +14,43 @@ LDFLAGS := -shared
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -MD -MP -I$(BUILD_DIR) -I$(CPYTHON)/include/python3.11 -fPIC
 WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_preview1_component_adapter.wasm
 LIBC := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so
+LIBCXX := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++.so
+LIBCXXABI := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++abi.so
+
 CPYTHON_ARCHIVES := \
 	$(CPYTHON)/lib/libpython3.11.a \
 	$(CPYTHON)/../Modules/_decimal/libmpdec/libmpdec.a \
 	$(CPYTHON)/../Modules/expat/libexpat.a
 
+NUMPY_LIBRARIES := \
+	$(BUILD_DIR)/numpy/core/_struct_ufunc_tests.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_rational_tests.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_operand_flag_tests.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_umath_tests.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_multiarray_tests.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_multiarray_umath.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/core/_simd.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/linalg/lapack_lite.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/linalg/_umath_linalg.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/fft/_pocketfft_internal.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_common.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_philox.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_pcg64.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_mt19937.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_generator.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/bit_generator.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/mtrand.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_sfc64.cpython-311-wasm32-wasi.so \
+	$(BUILD_DIR)/numpy/random/_bounded_integers.cpython-311-wasm32-wasi.so
+
 .PHONY: test
 test: $(BUILD_DIR)/bar.wasm $(RUNNER_CLI)
-	$(RUNNER_CLI) --env PYTHONPATH=/python --env PYTHONHOME=/python --mapdir /python::$(CPYTHON)/lib/python3.11 $<
+	$(RUNNER_CLI) \
+		--env PYTHONPATH=/python:/build \
+		--env PYTHONHOME=/python \
+		--mapdir /python::$(CPYTHON)/lib/python3.11 \
+		--mapdir /build::$(abspath $(BUILD_DIR)) \
+		$<
 
 $(BUILD_DIR)/bar.wasm: $(WASM_TOOLS_CLI)
 
@@ -29,6 +59,9 @@ $(BUILD_DIR)/bar.wasm: \
 		$(BUILD_DIR)/libfoo.so \
 		$(BUILD_DIR)/libpython3.11.so \
 		$(LIBC) \
+		$(LIBCXX) \
+		$(LIBCXXABI) \
+		$(NUMPY_LIBRARIES) \
 		$(WASI_ADAPTER)
 	$(WASM_TOOLS_CLI) component link \
 		--adapt wasi_snapshot_preview1=$(WASI_ADAPTER) \
@@ -36,6 +69,10 @@ $(BUILD_DIR)/bar.wasm: \
 		$(BUILD_DIR)/libbar.so \
 		$(BUILD_DIR)/libpython3.11.so \
 		$(LIBC) \
+		$(LIBCXX) \
+		$(LIBCXXABI) \
+		$(shell echo $(NUMPY_LIBRARIES) | \
+			sed 's_$(BUILD_DIR)/\([^ ]*\)_--dl-openable /build/\1=$(BUILD_DIR)/\1_g') \
 		-o $@
 
 $(BUILD_DIR)/libbar.so: $(BUILD_DIR)/bar.o $(BUILD_DIR)/bar_component_type.o $(BUILD_DIR)/bar_impl.o
@@ -101,6 +138,9 @@ $(RUNNER_CLI):
 
 $(LIBC) $(CC):
 	(cd wasi-sdk && make build/wasi-libc.BUILT)
+
+$(NUMPY_LIBRARIES):
+	bash build-numpy.sh
 
 .PHONY: clean
 clean:
