@@ -45,6 +45,7 @@ struct Ctx {
     wasi: WasiCtx,
     table: Table,
 }
+
 impl WasiView for Ctx {
     fn ctx(&self) -> &WasiCtx {
         &self.wasi
@@ -82,8 +83,8 @@ async fn main() -> Result<()> {
     for (guest_dir, host_dir) in options.mapdir {
         wasi = wasi.push_preopened_dir(
             Dir::from_std_file(std::fs::File::open(host_dir)?),
-            DirPerms::READ | DirPerms::MUTATE,
-            FilePerms::READ | FilePerms::WRITE,
+            DirPerms::all(),
+            FilePerms::all(),
             guest_dir,
         );
     }
