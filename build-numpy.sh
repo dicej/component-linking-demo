@@ -1,6 +1,8 @@
-CROSS_PREFIX=/Users/dicej/p/component-linking-demo/cpython/builddir/wasi/install
+THIS_DIR=$(cd $(dirname $0) && pwd -P)
+
+CROSS_PREFIX=${THIS_DIR}/cpython/builddir/wasi/install
 ARCH_TRIPLET=_wasi_wasm32-wasi
-WASI_SDK_PATH=/Users/dicej/p/component-linking-demo/wasi-sdk/build/install/opt/wasi-sdk
+WASI_SDK_PATH=${THIS_DIR}/wasi-sdk/build/install/opt/wasi-sdk
 
 export CC="${WASI_SDK_PATH}/bin/clang"
 export CXX="${WASI_SDK_PATH}/bin/clang++"
