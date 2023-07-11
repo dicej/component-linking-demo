@@ -20,7 +20,7 @@ export NPY_LAPACK_ORDER=
 
 export PATH="$(pwd)/bin:$PATH"
 
-pip install cython
+pip3 install cython
 (cd numpy && python3 setup.py build --disable-optimization -j 4)
 
 cp -a numpy/build/lib.*/numpy build/
