@@ -136,8 +136,8 @@ $(WIT_BINDGEN_CLI):
 $(RUNNER_CLI):
 	cargo build --release --manifest-path $(RUNNER)/Cargo.toml
 
-$(LIBC) $(CC):
-	(cd wasi-sdk && make build/wasi-libc.BUILT)
+$(LIBC) $(LIBCXX) $(LIBCXXABI) $(CC):
+	(cd wasi-sdk && make build/wasi-libc.BUILT build/libcxx.BUILT)
 
 $(NUMPY_LIBRARIES):
 	bash build-numpy.sh
