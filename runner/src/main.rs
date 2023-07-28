@@ -1,14 +1,14 @@
 use {
     anyhow::{anyhow, Result},
-    cap_std::fs::Dir,
     clap::Parser,
     tokio::fs,
     wasmtime::{
         component::{Component, Linker},
         Config, Engine, Store,
     },
-    wasmtime_wasi::preview2::{
-        wasi::command, DirPerms, FilePerms, Table, WasiCtx, WasiCtxBuilder, WasiView,
+    wasmtime_wasi::{
+        preview2::{command, DirPerms, FilePerms, Table, WasiCtx, WasiCtxBuilder, WasiView},
+        Dir,
     },
 };
 

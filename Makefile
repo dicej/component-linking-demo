@@ -12,7 +12,7 @@ BUILD_DIR := build
 CC := $(WASI_SDK)/bin/clang
 LDFLAGS := -shared
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -MD -MP -I$(BUILD_DIR) -I$(CPYTHON)/include/python3.11 -fPIC
-WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_preview1_component_adapter.wasm
+WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_snapshot_preview1.wasm
 LIBC := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so
 LIBCXX := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++.so
 LIBCXXABI := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++abi.so
@@ -136,7 +136,9 @@ $(WIT_BINDGEN_CLI):
 $(RUNNER_CLI):
 	cargo build --release --manifest-path $(RUNNER)/Cargo.toml
 
-$(LIBC) $(LIBCXX) $(LIBCXXABI) $(CC):
+$(LIBC) $(LIBCXX) $(LIBCXXABI) $(CC): wasi-sdk/build/wasi-libc.BUILT wasi-sdk/build/libcxx.BUILT
+
+wasi-sdk/build/wasi-libc.BUILT wasi-sdk/build/libcxx.BUILT:
 	(cd wasi-sdk && make build/wasi-libc.BUILT build/libcxx.BUILT)
 
 $(NUMPY_LIBRARIES):
