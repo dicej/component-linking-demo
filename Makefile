@@ -13,7 +13,12 @@ CC := $(WASI_SDK)/bin/clang
 LDFLAGS := -shared
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -MD -MP -I$(BUILD_DIR) -I$(CPYTHON)/include/python3.11 -fPIC
 WASI_ADAPTER := $(WASMTIME)/target/wasm32-unknown-unknown/release/wasi_snapshot_preview1.wasm
-LIBC := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so
+LIBC := \
+	$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc.so \
+	$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libwasi-emulated-mman.so \
+	$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libwasi-emulated-process-clocks.so \
+	$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libwasi-emulated-getpid.so \
+	$(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libwasi-emulated-signal.so
 LIBCXX := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++.so
 LIBCXXABI := $(WASI_SDK)/share/wasi-sysroot/lib/wasm32-wasi/libc++abi.so
 

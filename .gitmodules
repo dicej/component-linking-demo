@@ -6,7 +6,7 @@
         url = https://github.com/bytecodealliance/wit-bindgen
 [submodule "wasm-tools"]
         path = wasm-tools
-        url = https://github.com/dicej/wasm-tools
+        url = https://github.com/bytecodealliance/wasm-tools
         branch = linking
 [submodule "wasi-sdk"]
         path = wasi-sdk
@@ -16,5 +16,5 @@
         path = cpython
         url = https://github.com/dicej/cpython
 [submodule "numpy"]
-	path = numpy
-	url = https://github.com/numpy/numpy
+        path = numpy
+        url = https://github.com/numpy/numpy
